@@ -1,0 +1,283 @@
+<div class="page-header">
+    <%= link_to new_user_path, class: 'btn btn-primary' do %>
+        <span class="glyphicon glyphicon-plus"></span> New User
+        <% end %>
+            <%= link_to new_place_path, class: 'btn btn-primary' do %>
+                <span class="glyphicon glyphicon-plus"></span> New Place
+                <% end %>
+                    <h1>Listing users</h1>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Address</th>
+                <th></th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <%= content_tag_for(:tr, @users) do |user| %>
+                <td>
+                    <a class="user_name" data-id="<%= user.id %>">
+                        <%= user.name %>
+                            <a></td>
+                <td>
+                    <%= user.address %>
+                </td>
+                <td>
+                    <%= link_to 'Show', user %>
+                </td>
+                <td>
+                    <%= link_to 'Edit', edit_user_path(user) %>
+                </td>
+                <td>
+                    <%= link_to 'Destroy', user, method: :delete, data: { confirm: 'Are you sure?' } %>
+                </td>
+                <% end %>
+        </tbody>
+    </table>
+</div>
+<div class="row">
+    <input type="range" id="myRange" value="5" min="0" max="100">
+    <b><span id="range_value">5 Km</span></b>
+</div>
+<div class="row">
+    <div id="right-panel"></div>
+    <div id="map" style='width: 885px; height: 500px;'></div>
+</div>
+<div class="row">
+    <div id="direction_option" class="hide">
+        <select id="mode">
+          <option value="DRIVING">Driving</option>
+          <option value="WALKING">Walking</option>
+          <option value="BICYCLING">Bicycling</option>
+          <option value="TRANSIT">Transit</option>
+        </select> Mode Of Travelling
+        <input type="checkbox" id="direction">Direction
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-9" id="place_list">
+        <table class="table table-striped table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <%= content_tag_for(:tr, @places) do |place| %>
+                    <td>
+                        <%= place.name %>
+                    </td>
+                    <td>
+                        <%= place.address %>
+                    </td>
+                    <td>
+                        <%= link_to 'Show', place %>
+                    </td>
+                    <td>
+                        <%= link_to 'Edit', edit_place_path(place) %>
+                    </td>
+                    <td>
+                        <%= link_to 'Destroy', place, method: :delete, data: { confirm: 'Are you sure?' } %>
+                    </td>
+                    <% end %>
+            </tbody>
+        </table>
+    </div>
+    <div class="col-md-3" id="allotment_list">
+        <%= render 'allotment_list' %>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        directionsDisplay = new google.maps.DirectionsRenderer();
+        var directionsService = new google.maps.DirectionsService();
+        var request, __markers;
+
+        $('.user_name').unbind('click');
+        $('.user_name').click(function() {
+            $('#direction_option').removeClass("hide");
+            localStorage.setItem("user_id", $(this).attr("data-id"));
+            retrive_place();
+        });
+
+        $('#myRange').change(function() {
+            $('#direction_option').removeClass("hide");
+            $('#range_value').text($(this).val() + " Km");
+            retrive_place();
+            if (!($('#direction').is(':checked'))) {
+                mapHandler.removeMarkers(__markers);
+            }
+        });
+
+        mapHandler = Gmaps.build('Google');
+        mapHandler.buildMap({
+            provider: {
+                // mapTypeId: 'satellite'
+            },
+            internal: {
+                id: 'map'
+            }
+        }, function() {
+            var markersData = <%= raw @hash.to_json %>;
+            updateMarkers(mapHandler, markersData);
+        });
+        mapHandler.fitMapToBounds();
+
+        $('#direction').change(function() {
+            if ($(this).is(':checked')) {
+                retrive_route();
+            }else{
+                mapHandler.removeMarkers(__markers);
+                directionsDisplay.setDirections({routes: []}); //clear route
+                retrive_place()
+            }
+        });
+
+        function retrive_place(){
+            $.ajax({
+                url: "<%= place_list_path %>",
+                type: "GET",
+                data: {
+                    id: localStorage.getItem("user_id"),
+                    range: $('#myRange').val()
+                }
+            });
+        }
+
+        function retrive_route() {
+            $.ajax({
+                url: "<%= direction_info_path %>",
+                type: "GET",
+                dataType: 'JSON',
+                data: {
+                    travelMode: $('#mode').val()
+                },
+                success: function(data) {
+                    request = data;
+                    directionsService.route(request, function(response, status) {
+                        if (status == google.maps.DirectionsStatus.OK) {
+                            directionsDisplay.setDirections(response);
+                        }
+                    });
+                    mapHandler.buildMap({
+                        provider: {},
+                        internal: {
+                            id: 'map'
+                        }
+                    }, function() {
+                        mapHandler.removeMarkers(__markers);
+                        directionsDisplay.setMap(mapHandler.getMap());
+                        directionsDisplay.setPanel(document.getElementById('right-panel'));
+                    });
+                }
+            });
+        }
+
+
+       
+
+
+
+        // function calculateAndDisplayRoute(directionsService, directionsDisplay) {
+        //     var waypts = [];
+        //     var user = <%= raw @hash.to_json %>
+        //     debugger
+        // waypts.push({
+        //     location: checkboxArray[i].value,
+        //     stopover: true
+        // });
+
+        // directionsService.route({
+        //     origin: document.getElementById('start').value,
+        //     destination: document.getElementById('end').value,
+        //     waypoints: waypts,
+        //     optimizeWaypoints: true,
+        //     travelMode: google.maps.TravelMode.DRIVING
+        // }, function(response, status) {
+        //     if (status === google.maps.DirectionsStatus.OK) {
+        //         directionsDisplay.setDirections(response);
+        //         var route = response.routes[0];
+        //         var summaryPanel = document.getElementById('directions-panel');
+        //         summaryPanel.innerHTML = '';
+        //         // For each route, display summary information.
+        //         for (var i = 0; i < route.legs.length; i++) {
+        //             var routeSegment = i + 1;
+        //             summaryPanel.innerHTML += '<b>Route Segment: ' + routeSegment +
+        //                 '</b><br>';
+        //             summaryPanel.innerHTML += route.legs[i].start_address + ' to ';
+        //             summaryPanel.innerHTML += route.legs[i].end_address + '<br>';
+        //             summaryPanel.innerHTML += route.legs[i].distance.text + '<br><br>';
+        //         }
+        //     } else {
+        //         window.alert('Directions request failed due to ' + status);
+        //     }
+        // });
+        // }
+
+        // add double click event
+        // google.maps.event.addListener(mapHandler.map.serviceObject, 'dblclick', function(event) {            
+        //     geocodePoint(event.latLng, function(data) {
+        //        console.log(data);
+        //     });                        
+        // });
+
+        // var geocoder = new google.maps.Geocoder();
+
+        // function geocodePoint(latlng, callback) {
+
+        //     var street_number = ''; 
+        //     var route = ''; 
+        //     var country = ''; 
+        //     var postal_code = ''; 
+        //     var city = ''; 
+        //     var full_address = '';
+        //     var latitude = latlng.lat();
+        //     var longitude = latlng.lng();
+
+        //     geocoder.geocode({'latLng': latlng }, function(responses) { 
+
+        //         if (responses && responses.length > 0) {
+
+        //               full_address = responses[0].formatted_address;
+
+        //               responses[0].address_components.forEach(function(el) { 
+        //                   el.types.forEach(function(type) { 
+        //                       if(type == 'street_number') street_number = el.long_name;  
+        //                       if(type == 'route') route = el.long_name; 
+        //                       if(type == 'country') country = el.long_name;
+        //                       if(type == 'postal_code') postal_code = el.long_name; 
+        //                       if(type == 'locality') city = el.long_name; 
+        //                   }) 
+        //               }); 
+        //         }
+        //         else {
+        //             alert("Could not geocode... :(");
+        //         }
+
+        //         callback({
+        //             street_number: street_number,
+        //             route: route,
+        //             postal_code: postal_code,
+        //             city : city,
+        //             country: country,
+        //             latitude: latitude,
+        //             longitude: longitude,
+        //             full_address:full_address
+        //         }); 
+        //     }); 
+        // }
+    });
+</script>

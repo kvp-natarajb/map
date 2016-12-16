@@ -1,0 +1,26 @@
+<div class="page-header">
+  <%= link_to allotments_path, class: 'btn btn-default' do %>
+    <span class="glyphicon glyphicon-list-alt"></span>
+    Back
+  <% end %>
+  <%= link_to edit_allotment_path(@allotment), class: 'btn btn-primary' do %>
+    <span class="glyphicon glyphicon-pencil"></span>
+    Edit
+  <% end %>
+  <h1>Show allotment</h1>
+</div>
+
+<dl class="dl-horizontal">
+  <dt>Date:</dt>
+  <dd><%= @allotment.date %></dd>
+
+  <dt>Position:</dt>
+  <dd><%= @allotment.position %></dd>
+
+  <dt>User:</dt>
+  <dd><%= @allotment.user %></dd>
+
+  <dt>Place:</dt>
+  <dd><%= @allotment.place %></dd>
+
+</dl>

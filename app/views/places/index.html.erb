@@ -1,0 +1,43 @@
+<div class="page-header">
+  <%= link_to new_place_path, class: 'btn btn-primary' do %>
+    <span class="glyphicon glyphicon-plus"></span>
+    New Place
+  <% end %>
+  <%= link_to users_path, class: 'btn btn-primary' do %>
+    <span class="glyphicon glyphicon-plus"></span>
+    Display Map
+  <% end %>
+  <h1>Listing places</h1>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-striped table-bordered table-hover">
+    <thead>
+      <tr>
+            <th>Latitude</th>
+            <th>Longitude</th>
+            <th>Name</th>
+            <th>Address</th>
+            <th>Title</th>
+            <th>User</th>
+            <th></th>
+        <th></th>
+        <th></th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <%= content_tag_for(:tr, @places) do |place| %>
+            <td><%= place.latitude %></td>
+            <td><%= place.longitude %></td>
+            <td><%= place.name %></td>
+            <td><%= place.address %></td>
+            <td><%= place.title %></td>
+            <td><%= place.user %></td>
+            <td><%= link_to 'Show', place %></td>
+        <td><%= link_to 'Edit', edit_place_path(place) %></td>
+        <td><%= link_to 'Destroy', place, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      <% end %>
+    </tbody>
+  </table>
+</div>

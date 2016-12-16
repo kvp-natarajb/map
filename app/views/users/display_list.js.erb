@@ -1,0 +1,31 @@
+$("#place_list").html("<%= escape_javascript (render partial: 'display_list') %>");
+$("#allotment_list").html("<%= escape_javascript (render partial: 'allotment_list') %>");
+(function() {
+  if(!$("#direction").is(':checked')){
+  	var markersData = <%= raw @hash.to_json %>;
+	updateMarkers(mapHandler, markersData);
+  }else{
+  	var directionsService = new google.maps.DirectionsService();
+	$.ajax({
+	    url: "<%= direction_info_path %>",
+	    type: "GET",
+	    dataType: 'JSON',
+	    success: function(data) {
+	        request = data;
+	        directionsService.route(request, function(response, status) {
+	            if (status == google.maps.DirectionsStatus.OK) {
+	                directionsDisplay.setDirections(response);
+	            }
+	        });
+	        mapHandler.buildMap({
+	            provider: {},
+	            internal: {
+	                id: 'map'
+	            }
+	        }, function() {
+	            directionsDisplay.setMap(mapHandler.getMap());
+	        });
+	    }
+	});
+  }
+})();

@@ -1,0 +1,26 @@
+<% if @allotments %>
+  <table class="table table-striped table-bordered table-hover" id="todo_list" data-update-url="<%= sort_users_url(range: params[:range]) %>">
+    <tbody>
+      <%= content_tag_for(:tr, @allotments) do |allotment| %>
+        <td><%= allotment.place.address if allotment.place.present? %></td>
+        <td><%= link_to 'Destroy', allotment, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>
+
+<script type="text/javascript">
+  //question_list jquery
+  jQuery(function() {
+    return $('#todo_list').sortable({
+      axis: 'y',
+      items: 'tr',
+      cursor: 'crosshair',
+      opacity: 0.4,
+      scroll: true,
+      update: function() {
+        return $.post($(this).data('update-url'), $(this).sortable('serialize'));
+      }
+    });
+  });
+</script>

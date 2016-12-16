@@ -1,0 +1,19 @@
+
+<dl class="dl-horizontal">
+  
+  <dt>Name:</dt>
+  <dd><%= @place.name %></dd>
+
+  <dt>Address:</dt>
+  <dd><%= @place.address %></dd>
+
+  <dt>Title:</dt>
+  <dd><%= @place.title %></dd>
+
+</dl>
+<div>
+  <%= link_to "Add",new_allotment_path, class: 'btn btn-default', remote: true %>
+    
+  <%= link_to "Edit",edit_place_path(@place), class: 'btn btn-primary', remote: true%>
+
+</div>
